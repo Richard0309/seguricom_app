@@ -12,6 +12,12 @@ import 'features/portero_scanner/data/repositories/scanner_repository_impl.dart'
 import 'features/portero_scanner/domain/repositories/scanner_repository.dart';
 import 'features/portero_scanner/domain/usecases/registrar_asistencia_usecase.dart';
 import 'features/portero_scanner/presentation/bloc/scanner_bloc.dart';
+import 'features/tutor_dashboard/data/datasources/tutor_remote_data_source.dart';
+import 'features/tutor_dashboard/data/repositories/tutor_repository_impl.dart';
+import 'features/tutor_dashboard/domain/repositories/tutor_repository.dart';
+import 'features/tutor_dashboard/domain/usecases/get_hijos_usecase.dart';
+import 'features/tutor_dashboard/domain/usecases/registrar_hijo_usecase.dart';
+import 'features/tutor_dashboard/presentation/bloc/tutor_bloc.dart';
 
 /// Instancia global del Service Locator.
 final sl = GetIt.instance;
@@ -71,4 +77,32 @@ Future<void> init() async {
   // ─────────────────────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
+
+
+
+
+  // ---------------------------------------------------------------------------
+  // FEATURE: TUTOR DASHBOARD
+  // ---------------------------------------------------------------------------
+  // FEATURE: TUTOR DASHBOARD
+  // ---------------------------------------------------------------------------
+
+  // 1. PRESENTATION — BLoC (nueva instancia por pantalla)
+  sl.registerFactory(
+    () => TutorBloc(sl<GetHijosUseCase>(), sl<RegistrarHijoUseCase>()),
+  );
+
+  // 2. DOMAIN — Casos de uso
+  sl.registerLazySingleton(() => GetHijosUseCase(sl<TutorRepository>()));
+  sl.registerLazySingleton(() => RegistrarHijoUseCase(sl<TutorRepository>()));
+
+  // 3. DATA — Repositorio (registrado bajo la interfaz de dominio)
+  sl.registerLazySingleton<TutorRepository>(
+    () => TutorRepositoryImpl(sl<TutorRemoteDataSource>()),
+  );
+
+  // 4. DATA — DataSource
+  sl.registerLazySingleton<TutorRemoteDataSource>(
+    () => TutorRemoteDataSourceImpl(sl<FirebaseFirestore>()),
+  );
 }

@@ -57,7 +57,6 @@ class DefaultFirebaseOptions {
     projectId: 'seguricom-f3c2b',
     storageBucket: 'seguricom-f3c2b.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAxvqj7sh9n3hQOZOrLNWtPwyBnn6nZtF8',
     appId: '1:440669392445:ios:5e7d0ba7969262678c6454',
@@ -66,7 +65,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'seguricom-f3c2b.firebasestorage.app',
     iosBundleId: 'com.example.seguricom',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyAxvqj7sh9n3hQOZOrLNWtPwyBnn6nZtF8',
     appId: '1:440669392445:ios:5e7d0ba7969262678c6454',
