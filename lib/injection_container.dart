@@ -18,6 +18,17 @@ import 'features/tutor_dashboard/domain/repositories/tutor_repository.dart';
 import 'features/tutor_dashboard/domain/usecases/get_hijos_usecase.dart';
 import 'features/tutor_dashboard/domain/usecases/registrar_hijo_usecase.dart';
 import 'features/tutor_dashboard/presentation/bloc/tutor_bloc.dart';
+import 'features/historial_asistencia/presentation/bloc/historial_bloc.dart';
+import 'features/historial_asistencia/data/datasources/historial_remote_data_source.dart';
+import 'features/historial_asistencia/domain/usecases/get_historial_usecase.dart';
+import 'features/historial_asistencia/data/repositories/historial_repository_impl.dart';
+import 'features/historial_asistencia/domain/repositories/historial_repository.dart';
+import 'features/permisos_salud/presentation/bloc/permisos_bloc.dart';
+import 'features/permisos_salud/data/datasources/permisos_remote_data_source.dart';
+import 'features/permisos_salud/domain/usecases/solicitar_permiso_usecase.dart';
+import 'features/permisos_salud/data/repositories/permisos_repository_impl.dart';
+import 'features/permisos_salud/domain/repositories/permisos_repository.dart';
+
 
 /// Instancia global del Service Locator.
 final sl = GetIt.instance;
@@ -104,5 +115,47 @@ Future<void> init() async {
   // 4. DATA — DataSource
   sl.registerLazySingleton<TutorRemoteDataSource>(
     () => TutorRemoteDataSourceImpl(sl<FirebaseFirestore>()),
+  );
+
+  // ---------------------------------------------------------------------------
+  // FEATURE: HISTORIAL ASISTENCIA
+  // ---------------------------------------------------------------------------
+  
+  // BLoC
+  sl.registerFactory(() => HistorialBloc(getHistorialUseCase: sl()));
+
+  // Casos de Uso
+  sl.registerLazySingleton(() => GetHistorialUseCase(sl()));
+
+  // Repositorio
+  sl.registerLazySingleton<HistorialRepository>(
+    () => HistorialRepositoryImpl(sl()),
+  );
+
+  // Data Source
+  sl.registerLazySingleton<HistorialRemoteDataSource>(
+    () => HistorialRemoteDataSourceImpl(sl<FirebaseFirestore>()),
+  );
+
+  // ---------------------------------------------------------------------------
+  // FEATURE: PERMISOS SALUD
+  // ---------------------------------------------------------------------------
+
+  // 1. PRESENTATION — BLoC
+  sl.registerFactory(
+    () => PermisosBloc(solicitarPermisoUseCase: sl()),
+  );
+
+  // 2. DOMAIN — Casos de uso
+  sl.registerLazySingleton(() => SolicitarPermisoUseCase(sl()));
+
+  // 3. DATA — Repositorio (registrado bajo la interfaz de dominio)
+  sl.registerLazySingleton<PermisosRepository>(
+    () => PermisosRepositoryImpl(sl()),
+  );
+
+  // 4. DATA — DataSource
+  sl.registerLazySingleton<PermisosRemoteDataSource>(
+    () => PermisosRemoteDataSourceImpl(sl<FirebaseFirestore>()),
   );
 }

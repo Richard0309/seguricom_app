@@ -151,6 +151,7 @@ class _HijosList extends StatelessWidget {
             ),
             trailing: Icon(Icons.chevron_right_rounded,
                 color: colorScheme.onSurfaceVariant),
+            onTap: () => context.push('/historial/${alumno.idAlumno}'),
           ),
         );
       },
