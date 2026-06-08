@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "440669392445",
+    "project_id": "seguricom-f3c2b",
+    "storage_bucket": "seguricom-f3c2b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440669392445:android:81a717bc8f28c6428c6454",
+        "android_client_info": {
+          "package_name": "com.example.seguricom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASfeb1d-zEF0qD6LlO32uGOEfeP5NXg7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
