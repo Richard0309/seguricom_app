@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../injection_container.dart';
+import '../../../shared/widgets/app_sidebar.dart';
 import '../../domain/entities/asistencia_entity.dart';
 import '../bloc/historial_bloc.dart';
 
@@ -51,6 +52,7 @@ class _HistorialViewState extends State<_HistorialView> {
         backgroundColor: colorScheme.surface,
         surfaceTintColor: colorScheme.surfaceTint,
       ),
+      drawer: const AppSidebar(),
       body: BlocBuilder<HistorialBloc, HistorialState>(
         builder: (context, state) {
           return switch (state) {

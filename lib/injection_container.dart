@@ -24,6 +24,7 @@ import 'features/historial_asistencia/domain/usecases/get_historial_usecase.dart
 import 'features/historial_asistencia/data/repositories/historial_repository_impl.dart';
 import 'features/historial_asistencia/domain/repositories/historial_repository.dart';
 import 'features/permisos_salud/presentation/bloc/permisos_bloc.dart';
+import 'features/permisos_salud/presentation/bloc/solicitar_permiso_bloc.dart';
 import 'features/permisos_salud/data/datasources/permisos_remote_data_source.dart';
 import 'features/permisos_salud/domain/usecases/solicitar_permiso_usecase.dart';
 import 'features/permisos_salud/data/repositories/permisos_repository_impl.dart';
@@ -144,6 +145,13 @@ Future<void> init() async {
   // 1. PRESENTATION — BLoC
   sl.registerFactory(
     () => PermisosBloc(solicitarPermisoUseCase: sl()),
+  );
+
+  sl.registerFactory(
+    () => SolicitarPermisoBloc(
+          getHijosUseCase: sl(),
+          solicitarPermisoUseCase: sl(),
+        ),
   );
 
   // 2. DOMAIN — Casos de uso

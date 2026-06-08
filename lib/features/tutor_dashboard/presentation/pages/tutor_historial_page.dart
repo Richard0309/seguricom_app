@@ -1,37 +1,37 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../injection_container.dart';
 import '../../../shared/widgets/app_sidebar.dart';
-import '../../../historial_asistencia/presentation/pages/historial_page.dart';
-import '../bloc/tutor_bloc.dart';
-import '../widgets/registro_hijo_modal.dart';
+import '../../../tutor_dashboard/domain/entities/alumno_entity.dart';
+import '../../../tutor_dashboard/presentation/bloc/tutor_bloc.dart';
 
-/// Punto de entrada del módulo Tutor Dashboard.
-/// Provee el [TutorBloc] e inicia la carga de hijos al montarse.
-class TutorDashboardPage extends StatelessWidget {
-  const TutorDashboardPage({super.key});
+/// Pantalla de selección de alumno para ver su historial de asistencias.
+/// Accedida desde el Sidebar en "Historial de Asistencias".
+class TutorHistorialPage extends StatelessWidget {
+  const TutorHistorialPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<TutorBloc>(),
-      child: const _TutorDashboardView(),
+      child: const _TutorHistorialView(),
     );
   }
 }
 
 // ── Vista interna con estado ───────────────────────────────────────────────
 
-class _TutorDashboardView extends StatefulWidget {
-  const _TutorDashboardView();
+class _TutorHistorialView extends StatefulWidget {
+  const _TutorHistorialView();
 
   @override
-  State<_TutorDashboardView> createState() => _TutorDashboardViewState();
+  State<_TutorHistorialView> createState() => _TutorHistorialViewState();
 }
 
-class _TutorDashboardViewState extends State<_TutorDashboardView> {
+class _TutorHistorialViewState extends State<_TutorHistorialView> {
   late final String _tutorUid;
 
   @override
@@ -48,38 +48,38 @@ class _TutorDashboardViewState extends State<_TutorDashboardView> {
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
-        title: const Text('Panel del Padre'),
+        title: const Text('Historial de Asistencias'),
         centerTitle: false,
         backgroundColor: colorScheme.surface,
         surfaceTintColor: colorScheme.surfaceTint,
       ),
       drawer: const AppSidebar(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => RegistroHijoModal.show(context, _tutorUid),
-        icon: const Icon(Icons.person_add_alt_1_rounded),
-        label: const Text('Añadir hijo'),
-      ),
-      body: BlocConsumer<TutorBloc, TutorState>(
-        listener: (context, state) {
-          if (state is TutorError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: colorScheme.error,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        },
+      body: BlocBuilder<TutorBloc, TutorState>(
         builder: (context, state) {
           return switch (state) {
             TutorLoading() => const Center(child: CircularProgressIndicator()),
             TutorLoaded(hijos: final hijos) when hijos.isEmpty =>
-              _EmptyState(tutorUid: _tutorUid),
-            TutorLoaded(hijos: final hijos) => _HijosList(hijos: hijos),
-            TutorError() => _ErrorState(
-                onRetry: () =>
-                    context.read<TutorBloc>().add(CargarHijosEvent(_tutorUid)),
+              const _EmptyState(),
+            TutorLoaded(hijos: final hijos) =>
+              _AlumnoList(alumnos: hijos),
+            TutorError() => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline_rounded,
+                        size: 48, color: colorScheme.error),
+                    const SizedBox(height: 16),
+                    const Text('No se pudieron cargar los hijos.'),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => context
+                          .read<TutorBloc>()
+                          .add(CargarHijosEvent(_tutorUid)),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
               ),
             _ => const SizedBox.shrink(),
           };
@@ -89,12 +89,12 @@ class _TutorDashboardViewState extends State<_TutorDashboardView> {
   }
 }
 
-// ── Widget: lista de hijos ─────────────────────────────────────────────────
+// ── Widget: lista de alumnos ───────────────────────────────────────────────
 
-class _HijosList extends StatelessWidget {
-  final List hijos;
+class _AlumnoList extends StatelessWidget {
+  final List<AlumnoEntity> alumnos;
 
-  const _HijosList({required this.hijos});
+  const _AlumnoList({required this.alumnos});
 
   @override
   Widget build(BuildContext context) {
@@ -102,10 +102,10 @@ class _HijosList extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-      itemCount: hijos.length,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      itemCount: alumnos.length,
       itemBuilder: (context, index) {
-        final alumno = hijos[index];
+        final alumno = alumnos[index];
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 0,
@@ -141,11 +141,8 @@ class _HijosList extends StatelessWidget {
             ),
             trailing: Icon(Icons.chevron_right_rounded,
                 color: colorScheme.onSurfaceVariant),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => HistorialPage(idAlumno: alumno.idAlumno),
-              ),
-            ),
+            onTap: () =>
+                context.push('/tutor/historial/${alumno.idAlumno}'),
           ),
         );
       },
@@ -156,9 +153,7 @@ class _HijosList extends StatelessWidget {
 // ── Widget: estado vacío ───────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
-  final String tutorUid;
-
-  const _EmptyState({required this.tutorUid});
+  const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
@@ -185,56 +180,10 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Presiona el botón "Añadir hijo" para comenzar.',
+              'Registra un hijo desde el Panel Principal para ver su historial.',
               style: textTheme.bodyMedium
                   ?.copyWith(color: colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 28),
-            FilledButton.tonalIcon(
-              onPressed: () => RegistroHijoModal.show(context, tutorUid),
-              icon: const Icon(Icons.add),
-              label: const Text('Añadir primer hijo'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Widget: estado de error ────────────────────────────────────────────────
-
-class _ErrorState extends StatelessWidget {
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.wifi_off_rounded,
-                size: 64, color: colorScheme.error.withValues(alpha: 0.7)),
-            const SizedBox(height: 16),
-            Text(
-              'No se pudo cargar la información',
-              style: textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar'),
             ),
           ],
         ),

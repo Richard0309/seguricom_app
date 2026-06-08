@@ -60,7 +60,7 @@ class _LoginViewState extends State<_LoginView> {
               case 'portero':
                 context.go('/portero');
               case 'tutor':
-                context.go('/tutor');
+                context.go('/tutor/dashboard');
               default:
                 _mostrarError(
                   context,
