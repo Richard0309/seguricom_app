@@ -18,7 +18,12 @@ class AppSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final currentPath = GoRouterState.of(context).uri.path;
+    String currentPath = '';
+    try {
+      currentPath = GoRouterState.of(context).uri.path;
+    } catch (_) {
+      // GoRouterState no disponible en este contexto
+    }
 
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
