@@ -43,6 +43,12 @@ Aplicación móvil multiplataforma para la gestión de asistencia y permisos en 
 - Campos: motivo y URL del archivo adjunto.
 - Escritura atómica en Firestore con marca de tiempo.
 
+### Visualización de Reportes (`visualizar_reportes`)
+- Lectura de reportes generados por el administrador desde la colección `reportes`.
+- Filtrado por alumno (`idAlumno`) y ordenados por fecha descendente.
+- Tarjetas con tipo, descripción, estado (badge coloreado) y fecha formateada en locale `es_MX`.
+- Estados de carga, vacío y error con reintento.
+
 ### Panel del Tutor (`tutor_dashboard`)
 - Lista de hijos registrados con nombre, grado y grupo.
 - Registro de hijos con formulario modal (bottom sheet deslizable).
@@ -71,6 +77,7 @@ Aplicación móvil multiplataforma para la gestión de asistencia y permisos en 
 | Navegación | go_router 17.x |
 | Escaneo QR | mobile_scanner 7.x |
 | Igualdad de valores | equatable 2.x |
+| Formateo de fechas | intl 0.20.x |
 
 ---
 
@@ -93,6 +100,7 @@ lib/
     ├── historial_asistencia/              # Historial (10 archivos)
     ├── permisos_salud/                    # Permisos de salud (13 archivos)
     ├── tutor_dashboard/                   # Panel del tutor (14 archivos)
+    ├── visualizar_reportes/               # Visualización de reportes (8 archivos)
     └── shared/                            # Widgets reutilizables (1 archivo)
 ```
 
@@ -126,6 +134,7 @@ feature/
 | `/tutor/historial` | Selección de alumno para historial | Tutor |
 | `/tutor/historial/:idAlumno` | Historial de asistencia del alumno | Tutor |
 | `/tutor/solicitar-permiso` | Formulario de justificante médico | Tutor |
+| `/tutor/reportes/:idAlumno` | Visualización de reportes del alumno | Tutor |
 
 ---
 
@@ -169,6 +178,7 @@ flutter run
 | `alumnos` | Registros de alumnos (nombre, grado, grupo) |
 | `asistencias` | Registros de entrada/salida con fecha, hora y tipo |
 | `permisos` | Solicitudes de justificantes médicos |
+| `reportes` | Reportes generados por admin (tipo, descripción, estado, fecha, idAlumno, creadoPor) |
 
 ### Datos de Prueba
 

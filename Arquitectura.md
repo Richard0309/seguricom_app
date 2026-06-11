@@ -102,6 +102,7 @@ Router declarativo con `go_router`. Rutas planas sin anidamiento.
 | `/tutor/historial` | `TutorHistorialPage` | tutor_dashboard |
 | `/tutor/historial/:idAlumno` | `HistorialPage` | historial_asistencia |
 | `/tutor/solicitar-permiso` | `SolicitarPermisoPage` | permisos_salud |
+| `/tutor/reportes/:idAlumno` | `ReportesPage` | visualizar_reportes |
 
 ### Directorios Vacíos (reservados)
 
@@ -439,6 +440,117 @@ El `PermisosRemoteDataSourceImpl`:
 
 ---
 
+## Feature: Visualización de Reportes
+
+**Directorio:** `lib/features/visualizar_reportes/`
+**Archivos:** 8
+**Rol requerido:** Tutor
+
+### Estructura
+
+```
+visualizar_reportes/
+├── data/
+│   ├── datasources/
+│   │   └── reportes_remote_data_source.dart
+│   ├── models/
+│   │   └── reporte_model.dart
+│   └── repositories/
+│       └── reportes_repository_impl.dart
+├── domain/
+│   ├── entities/
+│   │   └── reporte_entity.dart
+│   ├── repositories/
+│   │   └── reportes_repository.dart
+│   └── usecases/
+│       └── get_reportes_usecase.dart
+└── presentation/
+    ├── bloc/
+    │   ├── reportes_bloc.dart
+    │   ├── reportes_event.dart
+    │   └── reportes_state.dart
+    └── pages/
+        └── reportes_page.dart
+```
+
+### Flujo de Consulta
+
+```
+ReportesPage(idAlumno)
+    │
+    ▼ initState
+CargarReportesEvent(idAlumno)
+    │
+    ▼
+ReportesBloc ──llama──▶ GetReportesUseCase
+    │
+    ▼
+ReportesRemoteDataSourceImpl
+    │
+    ├─ Consulta colección `reportes`
+    │   .where('idAlumno', isEqualTo: idAlumno)
+    │   .orderBy('fecha', descending: true)
+    │
+    └─ Retorna List<ReporteModel>
+```
+
+### Modelo de Datos
+
+`ReporteModel` extiende `ReporteEntity` y añade:
+- `fromJson(Map<String, dynamic>)` — deserialización desde Firestore (convierte `Timestamp` a `DateTime`)
+- `toJson()` — serialización para escritura
+- `fromEntity(ReporteEntity)` — conversión desde entidad de dominio
+
+### Entidad de Dominio
+
+```dart
+ReporteEntity {
+  String creadoPor;      // Usuario que generó el reporte
+  String descripcion;    // Contenido del reporte
+  String estado;         // 'generado' | 'pendiente' | 'informativo' | 'atendido' | 'leido' | 'rechazado' | 'cancelado'
+  DateTime fecha;        // Fecha y hora del reporte (convertida desde Timestamp)
+  String idAlumno;       // ID del alumno referenciado
+  String tipo;           // Tipo de reporte (ej. 'citatorio')
+}
+```
+
+### Estados del BLoC
+
+| Estado | Descripción |
+|--------|-------------|
+| `ReportesInitial` | Estado inicial |
+| `ReportesLoading` | Carga en curso |
+| `ReportesLoaded(reportes)` | Lista de reportes (puede estar vacía) |
+| `ReportesError(message)` | Error de carga con botón de reintentar |
+
+### UI — Tarjetas de Reporte
+
+Cada reporte se muestra en una `Card` con:
+
+| Elemento | Descripción |
+|----------|-------------|
+| **Título** | Campo `tipo` (ej. "Citatorio") |
+| **Badge Estado** | Color según `estado`: |
+| | • Naranja: `generado`, `pendiente` |
+| | • Azul: `informativo` |
+| | • Verde: `atendido`, `leido` |
+| | • Rojo: `rechazado`, `cancelado` |
+| **Descripción** | Campo `descripcion` |
+| **Fecha** | Formateada con `intl`: `dd 'de' MMMM, yyyy - hh:mm a` (locale `es_MX`) → ej. "10 de junio de 2026 - 03:15 PM" |
+| **Creado por** | Campo `creadoPor` (si no vacío) |
+
+### Manejo de Errores Específico
+
+En `ReportesRemoteDataSourceImpl` se detecta el error `failed-precondition` de Firestore (índice compuesto faltante) y se lanza un `ServerException` con mensaje guiado para crear el índice desde la consola de Firebase.
+
+### Integración en Dashboard
+
+Desde `TutorDashboardPage`, cada tarjeta de alumno incluye un botón **"Reportes"** que navega a `/tutor/reportes/:idAlumno` usando `go_router`.
+
+---
+
+## Feature: Tutor Dashboard
+
 ## Feature: Tutor Dashboard
 
 **Directorio:** `lib/features/tutor_dashboard/`
@@ -651,6 +763,17 @@ sl.registerLazySingleton(() => FirebaseFirestore.instance);
 | `estado` | `String` | `'pendiente'` / `'aprobado'` / `'rechazado'` |
 | `fechaSolicitud` | `Timestamp` | Marca de tiempo del servidor |
 
+### `reportes`
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `creadoPor` | `String` | Usuario que generó el reporte |
+| `descripcion` | `String` | Contenido del reporte |
+| `estado` | `String` | `'generado'` / `'pendiente'` / `'informativo'` / `'atendido'` / `'leido'` / `'rechazado'` / `'cancelado'` |
+| `fecha` | `Timestamp` | Fecha y hora de generación |
+| `idAlumno` | `String` | ID del alumno referenciado |
+| `tipo` | `String` | Tipo de reporte (ej. `'citatorio'`) |
+
 ---
 
 ## Diagrama de Navegación
@@ -660,21 +783,28 @@ sl.registerLazySingleton(() => FirebaseFirestore.instance);
                     │  LoginPage  │  (/)
                     └──────┬──────┘
                            │
-              ┌────────────┴────────────┐
-              │                         │
-              ▼                         ▼
-     ┌────────────────┐      ┌──────────────────┐
-     │  ScannerPage   │      │ TutorDashboard   │
-     │   (/portero)   │      │(/tutor/dashboard)│
-     └────────────────┘      └────────┬─────────┘
-                                      │
-                          ┌───────────┼───────────┐
-                          │           │           │
-                          ▼           ▼           ▼
-                   ┌──────────┐ ┌──────────┐ ┌──────────────────┐
-                   │Historial │ │Historial │ │SolicitarPermiso  │
-                   │ Page     │ │ (selec.) │ │     Page         │
-                   │(:idAlumno)│ │(/tutor/  │ │(/tutor/solicitar-│
-                   └──────────┘ │historial)│ │    permiso)      │
-                                └──────────┘ └──────────────────┘
+               ┌────────────┴────────────┐
+               │                         │
+               ▼                         ▼
+      ┌────────────────┐      ┌──────────────────┐
+      │  ScannerPage   │      │ TutorDashboard   │
+      │   (/portero)   │      │(/tutor/dashboard)│
+      └────────────────┘      └────────┬─────────┘
+                                       │
+                           ┌───────────┼───────────┐
+                           │           │           │
+                           ▼           ▼           ▼
+                    ┌──────────┐ ┌──────────┐ ┌──────────────────┐
+                    │Historial │ │Historial │ │SolicitarPermiso  │
+                    │ Page     │ │ (selec.) │ │     Page         │
+                    │(:idAlumno)│ │(/tutor/  │ │(/tutor/solicitar-│
+                    └──────────┘ │historial)│ │    permiso)      │
+                                 └──────────┘ └──────────────────┘
+                                       │
+                                       ▼
+                              ┌──────────────────┐
+                              │Reportes Page     │
+                              │(/tutor/reportes/ │
+                              │ :idAlumno)       │
+                              └──────────────────┘
 ```
