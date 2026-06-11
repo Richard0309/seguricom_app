@@ -29,6 +29,11 @@ import 'features/permisos_salud/data/datasources/permisos_remote_data_source.dar
 import 'features/permisos_salud/domain/usecases/solicitar_permiso_usecase.dart';
 import 'features/permisos_salud/data/repositories/permisos_repository_impl.dart';
 import 'features/permisos_salud/domain/repositories/permisos_repository.dart';
+import 'features/visualizar_reportes/presentation/bloc/reportes_bloc.dart';
+import 'features/visualizar_reportes/domain/usecases/get_reportes_usecase.dart';
+import 'features/visualizar_reportes/data/repositories/reportes_repository_impl.dart';
+import 'features/visualizar_reportes/domain/repositories/reportes_repository.dart';
+import 'features/visualizar_reportes/data/datasources/reportes_remote_data_source.dart';
 
 
 /// Instancia global del Service Locator.
@@ -165,5 +170,29 @@ Future<void> init() async {
   // 4. DATA — DataSource
   sl.registerLazySingleton<PermisosRemoteDataSource>(
     () => PermisosRemoteDataSourceImpl(sl<FirebaseFirestore>()),
+  );
+
+  // ---------------------------------------------------------------------------
+  // FEATURE: VISUALIZAR REPORTES
+  // ---------------------------------------------------------------------------
+
+  // 1. PRESENTATION — BLoC
+  sl.registerFactory(
+    () => ReportesBloc(getReportesUseCase: sl<GetReportesUseCase>()),
+  );
+
+  // 2. DOMAIN — Casos de uso
+  sl.registerLazySingleton(
+    () => GetReportesUseCase(sl<ReportesRepository>()),
+  );
+
+  // 3. DATA — Repositorio
+  sl.registerLazySingleton<ReportesRepository>(
+    () => ReportesRepositoryImpl(sl<ReportesRemoteDataSource>()),
+  );
+
+  // 4. DATA — DataSource
+  sl.registerLazySingleton<ReportesRemoteDataSource>(
+    () => ReportesRemoteDataSourceImpl(sl<FirebaseFirestore>()),
   );
 }

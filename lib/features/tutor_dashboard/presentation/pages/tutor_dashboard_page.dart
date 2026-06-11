@@ -1,10 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../injection_container.dart';
-import '../../../shared/widgets/app_sidebar.dart';
-import '../../../historial_asistencia/presentation/pages/historial_page.dart';
+import '../../../shared/widgets/app_sidebar.dart'
+    show AppSidebar;
 import '../bloc/tutor_bloc.dart';
 import '../widgets/registro_hijo_modal.dart';
 
@@ -113,38 +114,76 @@ class _HijosList extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: colorScheme.outlineVariant),
           ),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            leading: CircleAvatar(
-              radius: 24,
-              backgroundColor: colorScheme.primaryContainer,
-              child: Text(
-                alumno.nombre.isNotEmpty
-                    ? alumno.nombre[0].toUpperCase()
-                    : '?',
-                style: textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: colorScheme.primaryContainer,
+                      child: Text(
+                        alumno.nombre.isNotEmpty
+                            ? alumno.nombre[0].toUpperCase()
+                            : '?',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            alumno.nombre,
+                            style: textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${alumno.grado} — Grupo ${alumno.grupo}',
+                            style: textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            title: Text(
-              alumno.nombre,
-              style: textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              '${alumno.grado} — Grupo ${alumno.grupo}',
-              style: textTheme.bodySmall
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
-            ),
-            trailing: Icon(Icons.chevron_right_rounded,
-                color: colorScheme.onSurfaceVariant),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => HistorialPage(idAlumno: alumno.idAlumno),
-              ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => context
+                            .push('/tutor/historial/${alumno.idAlumno}'),
+                        icon: const Icon(Icons.history_rounded, size: 18),
+                        label: const Text('Historial'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () =>
+                            context.push('/tutor/reportes/${alumno.idAlumno}'),
+                        icon: const Icon(Icons.assignment_rounded, size: 18),
+                        label: const Text('Reportes'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         );
